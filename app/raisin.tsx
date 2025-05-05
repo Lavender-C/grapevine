@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, FlatList, TextInput, StyleSheet, ScrollView } from 'react-native';
-import { Kid } from './types/kid';
-import { v4 as uuidv4 } from 'uuid';
+import { Kid }  from '../types/kid';
+import uuid from 'react-native-uuid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // const mockKids: Kid[] = [
@@ -53,7 +53,7 @@ export default function RaisinScreen() {
 
         const newKid: Kid = {
 
-            id: uuidv4(),
+            id: uuid.v4() as string,
             firstName: form.firstName,
             lastName: form.lastName,
             age: parseInt(form.age),
@@ -83,7 +83,7 @@ export default function RaisinScreen() {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.title}>Add a Kid</Text>
             {['firstName', 'lastName', 'age', 'grade', 'notes'].map((field) =>  (
                 <TextInput
@@ -116,7 +116,7 @@ export default function RaisinScreen() {
                     </View>
                 )}
             />
-        </ScrollView>
+        </View>
     );
 }
 
