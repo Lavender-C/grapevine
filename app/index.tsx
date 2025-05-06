@@ -1,16 +1,40 @@
-import { View, Text, Button } from 'react-native';
+import { View, Text, Button, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
-export default function Home() {
+export default function HomeScreen() {
+    const { user, switchToRaisin, switchToInstructor, clearUser } = useCurrentUser();
+
     return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10 }}>
-            <Text style={{ fontSize: 24, fontWeight: 'bold' }}> Welcome to Grapevine! </Text>
-            <Link href="/raisin" asChild>
-                <Button title="Go to Raisin View" />
-            </Link>
-            <Link href="/instructor" asChild>
-                <Button title="Go to Instructor View" />
-            </Link>
+        <View style={styles.container}>
+        <Text style={styles.title}>Login As:</Text>
+
+        <Button title="Raisin (Parent)" onPress={switchToRaisin} />
+        <Button title="Instructor (Teacher)" onPress={switchToInstructor} />
+
+        {user && (
+            <>
+            <Text style={styles.userInfo}>
+                Logged in as {user.firstName} ({user.role})
+            </Text>
+            <Button title="Clear User" onPress={clearUser} />
+            </>
+        )}
+
+        <Link href="/raisin" asChild>
+            <Button title="Raisin View" />
+        </Link>
+
+        <Link href="/instructor" asChild>
+            <Button title="Instructor View" />
+        </Link>
         </View>
     );
-}
+    }
+
+
+    const styles = StyleSheet.create({
+        container: { flex: 1, padding: 20, justifyContent: 'center' },
+        title: { fontSize: 24, marginBottom: 20, fontWeight: 'bold' },
+        userInfo: { marginTop: 20, fontSize: 16, fontStyle: 'italic' },
+    });

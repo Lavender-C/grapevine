@@ -1,140 +1,141 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, FlatList, TextInput, StyleSheet, ScrollView } from 'react-native';
-import { Kid }  from '../types/kid';
-import uuid from 'react-native-uuid';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Kid } from '@/types/kid';
+import { Instructor } from '@/types/user';
+import KidCard from '@/components/KidCard';
 
-// const mockKids: Kid[] = [
-//     {
-//         id: uuidv4(),
-//         firstName: 'Daniel',
-//         lastName: 'Vickers',
-//         age: 16,
-//         grade: 11,
-//         notes: 'N/A',
-//         signedIn: false,
-//     },
-//     {
-//         id: uuidv4(),
-//         firstName: 'Lavender',
-//         lastName: 'Calhoun',
-//         age: 23,
-//         grade: 17,
-//         notes: 'pee pee poo poo',
-//         signedIn: true,
-//     },
-// ];
-
-
-export default function RaisinScreen() {
-
+export default function RaisinDashboard() {
+    const { user } = useCurrentUser();
     const [kids, setKids] = useState<Kid[]>([]);
-
-    const [form, setForm] = useState({
-        firstName: '',
-        lastName: '',
-        age: '',
-        grade: '',
-        notes: '',
-    });
+    const [instructors, setInstructors] = useState<Instructor[]>([]);
+    const [expandedKidId, setExpandedKidId] = useState<string | null>(null);
 
     useEffect(() => {
         AsyncStorage.getItem('kids').then((data) => {
-            if (data) setKids(JSON.parse(data));
+        if (data) setKids(JSON.parse(data));
+        });
+        AsyncStorage.getItem('instructors').then((data) => {
+        if (data) setInstructors(JSON.parse(data));
         });
     }, []);
 
-    useEffect(() => {
-        AsyncStorage.setItem('kids', JSON.stringify(kids));
-    }, [kids]);
+    // patch to update old profiles with new uuid for testing
 
-    const addKid = () => {
-        if (!form.firstName || !form.lastName || !form.age || !form.grade) return;
+    // useEffect(() => {
+    //     if (user && user.role === 'raisin') {
+    //         AsyncStorage.getItem('kids').then((data) => {
+    //             if (data) {
+    //                 const existingKids: Kid[] = JSON.parse(data);
+    //                 const patchedKids = existingKids.map((kid) => {
+    //                     if (!kid.raisinIds || kid.raisinIds.length === 0) {
+    //                         return { ...kid, raisinIds: [user.id] };
+    //                     }
+    //                     return kid;
+    //                 });
+    //                 setKids(patchedKids);
+    //                 AsyncStorage.setItem('kids', JSON.stringify(patchedKids));
+    //             }
+    //         });
+    //     }
+    // }, [user]);
 
-        const newKid: Kid = {
-
-            id: uuid.v4() as string,
-            firstName: form.firstName,
-            lastName: form.lastName,
-            age: parseInt(form.age),
-            grade: parseInt(form.grade),
-            notes: form.notes || undefined,
-            signedIn: false,
-
-        };
-
-        setKids((prev) => [...prev, newKid]);
-
-        setForm({
-            firstName: '',
-            lastName: '',
-            age: '',
-            grade: '',
-            notes: '',
-        });
+    const getInstructor = (id: string) => instructors.find((inst) => inst.id === id);
+    
+    const getLastSignIn = (logs: any[] = []) => {
+        const lastSignIn = [...logs].reverse().find((log) => log.action === 'signIn');
+        return lastSignIn ? new Date(lastSignIn.timestamp).toLocaleString() : 'N/A';
     };
 
-    const toggleSignIn = (id: string) => {
-        setKids((prev) =>
-            prev.map((kid) =>
-                kid.id === id ? {...kid, signedIn: !kid.signedIn } :kid
-            )
-        );
+    // change?
+    if (!user || user.role !== 'raisin') return null;
+
+    const userKids = kids.filter((k) => k.raisinIds.includes(user.id));
+
+    const updateKid = (updated: Kid) => {
+        const newList = kids.map((k) => (k.id === updated.id ? updated : k));
+        setKids(newList);
+        AsyncStorage.setItem('kids', JSON.stringify(newList));
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Add a Kid</Text>
-            {['firstName', 'lastName', 'age', 'grade', 'notes'].map((field) =>  (
-                <TextInput
-                    key={field}
-                    placeholder={field[0].toUpperCase() + field.slice(1)}
-                    value={form[field as keyof typeof form]}
-                    onChangeText={(text) => setForm({ ...form, [field]: text })}
-                    keyboardType={field === 'age' ? 'numeric' : 'default'}
-                    style={styles.input}
-                    />
-                ))}
-                <Button title='Add Kid' onPress={addKid} />
+        <Text style={styles.header}>Welcome, {user.firstName}!</Text>
 
-                <Text style={[styles.title, { marginTop: 30}]}>Your Kids</Text>
-                <FlatList
-                data={kids}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.kidCard}>
-                        <Text style={styles.name}>
-                            {item.firstName} {item.lastName}
-                        </Text>
-                        <Text>Age: {item.age} | Grade: {item.grade} </Text>
-                        {item.notes && <Text>Notes: {item.notes} </Text>}
-                        <Text>Status: {item.signedIn ? 'Signed In' : 'Signed Out'}</Text>
-                        <Button
-                            title={item.signedIn ? 'Sign Out' : 'Sign In'}
-                            onPress={() => toggleSignIn(item.id)}
-                        />
-                    </View>
-                )}
-            />
+        <FlatList
+            data={userKids}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+                <KidCard
+                    key={item.id}
+                    kid={item}
+                    instructor={instructors.find((i) => i.id === item.instructorId)}
+                    expanded={expandedKidId === item.id}
+                    onToggleExpand={() =>
+                        setExpandedKidId((prev) => (prev === item.id ? null : item.id))
+                    }
+                    updateKid={updateKid}
+                />
+            )}
+        />
+
+        <View style={styles.tabBar}>
+            <TouchableOpacity style={styles.tabButton}>
+            <Text style={styles.tabText}>Check-In</Text>
+            </TouchableOpacity>
+        </View>
         </View>
     );
 }
 
+
+/* -------------------------------------------------------------------------- */
+/*                                   STYLES                                   */
+/* -------------------------------------------------------------------------- */
+
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10},
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 10,
-    },
-    kidCard: {
-        marginBottom: 15,
+
+    container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+    header: { fontSize: 26, fontWeight: 'bold', marginBottom: 20 },
+    card: {
         padding: 15,
         borderRadius: 10,
-        backgroundColor: '#C1D1A6FF',
+        backgroundColor: '#FFF5E1',
+        marginBottom: 15,
     },
-    name: { fontSize: 18, fontWeight: '600'},
-})
+    inactiveCard: {
+        backgroundColor: '#ddd',
+    },
+    kidName: { fontSize: 20, fontWeight: '600', marginBottom: 5 },
+    expandedSection: { marginTop: 10 },
+    editButton: {
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 6,
+        backgroundColor: '#fbc531',
+        alignItems: 'center',
+    },
+    editText: {
+        fontWeight: 'bold',
+    },
+    tabBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderColor: '#ccc',
+        backgroundColor: '#fff',
+    },
+    tabButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        backgroundColor: '#e1bee7',
+        borderRadius: 10,
+    },
+    tabText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+
+});
