@@ -3,8 +3,12 @@ export type AttendanceAction = 'signIn' | 'signOut';
 export type AttendanceLog = {
     timestamp: string;
     action: 'signIn' | 'signOut';
-    instructorId: string; // who performed the action
+    userID: string;
+    performedBy: string;
+    performedByRole: 'instructor' | 'raisin';
 };
+
+export type KidStatus = 'pending' | 'active';
 
 export type Kid = {
     id: string;
@@ -20,6 +24,6 @@ export type Kid = {
     signedIn: boolean;
     logs?: AttendanceLog[];
     raisinIds: string[];
-    instructorId: string;
+    instructorIds: string[];
+    status: KidStatus;
 };
-

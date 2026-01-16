@@ -1,5 +1,6 @@
 export type Instructor = {
     id: string;
+    title: string;
     firstName: string;
     lastName: string;
     classroomNumber: string;
