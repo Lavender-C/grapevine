@@ -38,6 +38,6 @@ TO-DO:
 <br>
 <img src="https://github.com/Lavender-C/grapevine/blob/main/assets/dev%20stuff/grapevine%20v2.png" width=750>
 <img src="https://github.com/Lavender-C/grapevine/blob/main/assets/dev%20stuff/Screenshot%202026-01-16%20030303.png" width=750>
-<img src="https://github.com/Lavender-C/grapevine/blob/main/assets/dev%20stuff/Screenshot_20260116_030644_Expo%20Go.png" width=320> <img src="https://github.com/Lavender-C/grapevine/blob/main/assets/dev%20stuff/Screenshot_20260116_030657_Expo%20Go.png" width=320>
+<img src="https://github.com/Lavender-C/grapevine/blob/main/assets/dev%20stuff/Screenshot_20260116_030657_Expo%20Go.png" width=320>
 
 
